@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VoltFix Portal - Electrical Maintenance & Work Order App</title>
+    <title>Dualufix - Electrical Maintenance Portal</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->
@@ -26,37 +26,16 @@
 </head>
 <body class="bg-slate-900 text-slate-100 h-full flex flex-col justify-between items-center selection:bg-amber-500 selection:text-white">
 
-    <script>
-        // --- MASTER CONFIGURATION & CONTROLS ---
-        const APP_CONFIG = {
-            isOnline: true, // Change to 'false' to instantly turn off the app for everyone
-            technicianPassword: "Volt123Password" // Change this password anytime you want for technicians
-        };
-
-        // Enforce Kill Switch
-        if (!APP_CONFIG.isOnline) {
-            document.write(`
-                <div style="display:flex;justify-content:center;align-items:center;height:100vh;background:#090d16;color:#ff5555;font-family:sans-serif;text-align:center;padding:20px;">
-                    <div>
-                        <h1 style="font-size:24px;margin-bottom:10px;">VoltFix Portal - Offline</h1>
-                        <p style="color:#94a3b8;font-size:14px;">The application has been temporarily disabled by the supervisor. Please check back later.</p>
-                    </div>
-                </div>
-            `);
-            throw new Error("App is offline");
-        }
-    </script>
-
     <div class="w-full h-full max-w-md bg-slate-950 flex flex-col shadow-2xl overflow-hidden relative border-x border-slate-800">
 
-        <!-- Top Header Navigation Bar -->
+        <!-- Header -->
         <header class="bg-slate-900 border-b border-slate-800 px-4 py-3 flex items-center justify-between z-10 shrink-0">
             <div class="flex items-center space-x-2">
                 <div class="w-8 h-8 rounded-lg bg-amber-500 flex items-center justify-center text-slate-950 font-bold shadow-md shadow-amber-500/20">
                     <i class="fa-solid fa-bolt text-sm"></i>
                 </div>
                 <div>
-                    <h1 class="font-bold text-sm tracking-tight text-slate-100 leading-none">VoltFix Portal</h1>
+                    <h1 class="font-bold text-sm tracking-tight text-slate-100 leading-none">Dualufix Portal</h1>
                     <span id="headerRoleBadge" class="text-[10px] uppercase font-semibold tracking-wider text-amber-400 bg-amber-400/10 px-1.5 py-0.5 rounded">Not Logged In</span>
                 </div>
             </div>
@@ -72,80 +51,68 @@
             </div>
         </header>
 
-        <!-- Main App Viewport Body -->
+        <!-- Main Viewport Body -->
         <main id="appBody" class="flex-1 overflow-y-auto relative bg-slate-950 p-4">
-            <!-- Dynamic views injected via JavaScript -->
+            <!-- Content loaded via JavaScript -->
         </main>
 
-        <!-- Bottom Navigation Footer -->
+        <!-- Navigation Footer -->
         <nav id="bottomNav" class="hidden bg-slate-900 border-t border-slate-800 px-4 py-2.5 flex justify-around items-center shrink-0 z-10">
         </nav>
 
-        <!-- Global Toast / Modal Container -->
+        <!-- Containers -->
         <div id="modalContainer"></div>
         <div id="toastContainer" class="fixed bottom-16 left-4 right-4 z-50 pointer-events-none flex flex-col space-y-2 items-center"></div>
     </div>
 
     <script>
-        // --- Central Application State ---
         const State = {
             currentUser: null, 
-            currentView: 'login', 
+            currentView: 'login',
+            supervisorAccount: {
+                username: 'supervisor',
+                password: 'ChangeMe123',
+                mustChangePassword: true
+            },
             faults: [
                 {
                     id: 'F-1001',
                     reporterId: 'w1',
-                    reporterName: 'John Doe (Routine Inspector)',
+                    reporterName: 'John Doe (Inspector)',
                     reporterRole: 'worker',
                     title: 'Main Breaker Panel Sparking',
                     location: 'Building A - Electrical Room B1',
-                    description: 'Observed intermittent sparking and clicking sound from breaker 12 during routine check.',
+                    description: 'Observed intermittent sparking from breaker 12 during check.',
                     priority: 'High',
                     status: 'Assigned', 
                     assignedToId: 'elec-1',
                     assignedToName: 'Mike Ross',
                     assignedPhone: '+1555019283',
-                    createdAt: new Date(Date.now() - 3600000 * 3).toISOString(),
+                    createdAt: new Date().toISOString(),
+                    completedAt: '',
                     progress: 50,
+                    materialsUsed: 'Copper wire 10AWG, arc shield',
                     beforePhoto: 'https://placehold.co/400x300/1e293b/f59e0b?text=Before:+Panel+Sparking',
-                    afterPhoto: ''
-                },
-                {
-                    id: 'F-1002',
-                    reporterId: 's1',
-                    reporterName: 'Sarah Jenkins (Office Staff)',
-                    reporterRole: 'staff',
-                    title: 'Office Lights Completely Off',
-                    location: 'Floor 3 - Marketing Department Suite 302',
-                    description: 'All workstation power outlets and overhead lights went dark abruptly around 2 PM.',
-                    priority: 'Urgent',
-                    status: 'Pending',
-                    assignedToId: '',
-                    assignedToName: '',
-                    assignedPhone: '',
-                    createdAt: new Date(Date.now() - 3600000 * 1).toISOString(),
-                    progress: 0,
-                    beforePhoto: 'https://placehold.co/400x300/1e293b/f43f5e?text=Before:+Dark+Office',
                     afterPhoto: ''
                 }
             ],
             electricians: [
-                { id: 'elec-1', name: 'Mike Ross', phone: '+1555019283', email: 'mike.ross@voltfix.internal', activeTasks: 1 },
-                { id: 'elec-2', name: 'Elena Vance', phone: '+1555014829', email: 'elena.vance@voltfix.internal', activeTasks: 0 },
-                { id: 'elec-3', name: 'David Chen', phone: '+1555019944', email: 'david.chen@voltfix.internal', activeTasks: 0 }
+                { id: 'elec-1', name: 'Mike Ross', username: 'mikeross', password: 'password123', phone: '+1555019283', email: 'mike.ross@dualufix.internal' },
+                { id: 'elec-2', name: 'Elena Vance', username: 'elenavance', password: 'password123', phone: '+1555014829', email: 'elena.vance@dualufix.internal' }
             ],
             smsInbox: [
-                { id: 1, recipient: '+1555019283', message: 'VoltFix Alert: New task assigned (F-1001) at Building A - Electrical Room B1.', time: '3 hrs ago' }
+                { id: 1, recipient: '+1555019283', message: 'Dualufix Alert: New work order assigned.', time: 'Just now' }
             ]
         };
 
-        window.addEventListener('DOMContentLoaded', () => {
-            const savedState = localStorage.getItem('voltfix_app_state');
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedState = localStorage.getItem('dualufix_app_state_v3');
             if (savedState) {
                 try {
                     const parsed = JSON.parse(savedState);
                     State.faults = parsed.faults || State.faults;
                     State.electricians = parsed.electricians || State.electricians;
+                    State.supervisorAccount = parsed.supervisorAccount || State.supervisorAccount;
                     State.smsInbox = parsed.smsInbox || State.smsInbox;
                 } catch(e) { console.error('Error loading saved state', e); }
             }
@@ -153,24 +120,26 @@
         });
 
         function saveStateToStorage() {
-            localStorage.setItem('voltfix_app_state', JSON.stringify({
+            localStorage.setItem('dualufix_app_state_v3', JSON.stringify({
                 faults: State.faults,
                 electricians: State.electricians,
+                supervisorAccount: State.supervisorAccount,
                 smsInbox: State.smsInbox
             }));
         }
 
-        function showToast(message, type = 'success') {
+        function showToast(message, type) {
+            type = type || 'success';
             const container = document.getElementById('toastContainer');
             const toast = document.createElement('div');
             const bgClass = type === 'success' ? 'bg-emerald-600 text-white' : type === 'error' ? 'bg-rose-600 text-white' : 'bg-amber-600 text-slate-950 font-medium';
-            toast.className = `${bgClass} px-4 py-2.5 rounded-lg shadow-lg text-xs font-semibold flex items-center space-x-2 pointer-events-auto fade-in max-w-xs text-center`;
-            toast.innerHTML = `<i class="fa-solid ${type === 'success' ? 'fa-circle-check' : 'fa-triangle-exclamation'}"></i><span>${message}</span>`;
+            toast.className = bgClass + ' px-4 py-2.5 rounded-lg shadow-lg text-xs font-semibold flex items-center space-x-2 pointer-events-auto fade-in max-w-xs text-center';
+            toast.innerHTML = '<i class="fa-solid ' + (type === 'success' ? 'fa-circle-check' : 'fa-triangle-exclamation') + '"></i><span>' + message + '</span>';
             container.appendChild(toast);
-            setTimeout(() => {
+            setTimeout(function() {
                 toast.style.opacity = '0';
                 toast.style.transition = 'opacity 0.3s ease';
-                setTimeout(() => toast.remove(), 300);
+                setTimeout(function() { toast.remove(); }, 300);
             }, 3000);
         }
 
@@ -217,6 +186,7 @@
             switch(State.currentView) {
                 case 'supervisor_dash': body.innerHTML = renderSupervisorDashboard(); break;
                 case 'supervisor_team': body.innerHTML = renderSupervisorTeamView(); break;
+                case 'supervisor_history': body.innerHTML = renderSupervisorHistoryView(); break;
                 case 'reports': body.innerHTML = renderReportsView(); break;
                 case 'worker_dash': body.innerHTML = renderWorkerDashboard(); break;
                 case 'staff_dash': body.innerHTML = renderStaffDashboard(); break;
@@ -231,28 +201,26 @@
                         <div class="w-16 h-16 bg-gradient-to-tr from-amber-500 to-amber-400 rounded-2xl mx-auto flex items-center justify-center text-slate-950 text-2xl shadow-lg shadow-amber-500/20 mb-3">
                             <i class="fa-solid fa-bolt"></i>
                         </div>
-                        <h2 class="text-xl font-bold text-slate-100">VoltFix Portal</h2>
+                        <h2 class="text-xl font-bold text-slate-100">Dualufix Portal</h2>
                         <p class="text-xs text-slate-400 mt-1">Electrical Maintenance & Work Order System</p>
                     </div>
 
                     <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl space-y-4">
                         <h3 class="text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">Select Portal Login</h3>
                         
-                        <!-- Supervisor Login -->
-                        <button onclick="loginAs('supervisor')" class="w-full text-left p-3 rounded-xl bg-slate-800 hover:bg-slate-700/80 border border-slate-700 transition flex items-center justify-between group">
+                        <button onclick="openSupervisorLoginModal()" class="w-full text-left p-3 rounded-xl bg-slate-800 hover:bg-slate-700/80 border border-slate-700 transition flex items-center justify-between group">
                             <div class="flex items-center space-x-3">
                                 <div class="w-10 h-10 rounded-lg bg-amber-500/10 text-amber-400 flex items-center justify-center text-base">
                                     <i class="fa-solid fa-user-shield"></i>
                                 </div>
                                 <div>
                                     <div class="text-sm font-semibold text-slate-200">Supervisor Portal</div>
-                                    <div class="text-[11px] text-slate-400">Dispatch, manage team & reports</div>
+                                    <div class="text-[11px] text-slate-400">Secure sign-in & team management</div>
                                 </div>
                             </div>
                             <i class="fa-solid fa-chevron-right text-xs text-slate-500"></i>
                         </button>
 
-                        <!-- Worker / Electrician Login Trigger -->
                         <button onclick="openWorkerLoginModal()" class="w-full text-left p-3 rounded-xl bg-slate-800 hover:bg-slate-700/80 border border-slate-700 transition flex items-center justify-between group">
                             <div class="flex items-center space-x-3">
                                 <div class="w-10 h-10 rounded-lg bg-cyan-500/10 text-cyan-400 flex items-center justify-center text-base">
@@ -260,14 +228,13 @@
                                 </div>
                                 <div>
                                     <div class="text-sm font-semibold text-slate-200">Electrician / Technician Login</div>
-                                    <div class="text-[11px] text-slate-400">Log faults & update progress</div>
+                                    <div class="text-[11px] text-slate-400">Unique user credentials sign-in</div>
                                 </div>
                             </div>
                             <i class="fa-solid fa-chevron-right text-xs text-slate-500"></i>
                         </button>
 
-                        <!-- Office Staff Login -->
-                        <button onclick="loginAs('staff')" class="w-full text-left p-3 rounded-xl bg-slate-800 hover:bg-slate-700/80 border border-slate-700 transition flex items-center justify-between group">
+                        <button onclick="loginAsStaff()" class="w-full text-left p-3 rounded-xl bg-slate-800 hover:bg-slate-700/80 border border-slate-700 transition flex items-center justify-between group">
                             <div class="flex items-center space-x-3">
                                 <div class="w-10 h-10 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-base">
                                     <i class="fa-solid fa-building-user"></i>
@@ -284,27 +251,113 @@
             `;
         }
 
+        function openSupervisorLoginModal() {
+            const container = document.getElementById('modalContainer');
+            container.innerHTML = `
+                <div class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 fade-in">
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-sm p-5 space-y-4 shadow-2xl">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-sm font-bold text-slate-100">Supervisor Secure Login</h3>
+                            <button onclick="closeModal()" class="text-slate-400 hover:text-slate-200"><i class="fa-solid fa-xmark text-base"></i></button>
+                        </div>
+                        <p class="text-xs text-slate-400">Default Username: <code class="text-amber-400">supervisor</code> | Default Password: <code class="text-amber-400">ChangeMe123</code></p>
+                        
+                        <div class="space-y-3">
+                            <div>
+                                <label class="block text-[11px] font-semibold text-slate-400 mb-1">Username</label>
+                                <input type="text" id="supUsername" placeholder="supervisor" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-amber-500">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-semibold text-slate-400 mb-1">Password</label>
+                                <input type="password" id="supPassword" placeholder="Password" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-amber-500">
+                            </div>
+                            <button onclick="verifySupervisorLogin()" class="w-full py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-xl transition shadow">Sign In as Supervisor</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function verifySupervisorLogin() {
+            const u = document.getElementById('supUsername').value.trim();
+            const p = document.getElementById('supPassword').value;
+
+            if (u !== State.supervisorAccount.username || p !== State.supervisorAccount.password) {
+                showToast('Invalid supervisor credentials!', 'error');
+                return;
+            }
+
+            closeModal();
+            if (State.supervisorAccount.mustChangePassword) {
+                openChangeSupervisorPasswordModal();
+            } else {
+                State.currentUser = { id: 'sup-1', name: 'Chief Supervisor', role: 'supervisor', email: 'supervisor@dualufix.internal', phone: '+1555019000' };
+                State.currentView = 'supervisor_dash';
+                showToast('Logged in as Supervisor');
+                render();
+            }
+        }
+
+        function openChangeSupervisorPasswordModal() {
+            const container = document.getElementById('modalContainer');
+            container.innerHTML = `
+                <div class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 fade-in">
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-sm p-5 space-y-4 shadow-2xl">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-sm font-bold text-amber-400"><i class="fa-solid fa-triangle-exclamation mr-1"></i> First-Time Password Change</h3>
+                        </div>
+                        <p class="text-xs text-slate-400">For security compliance, you must change your default supervisor password before accessing the system.</p>
+                        
+                        <div class="space-y-3">
+                            <div>
+                                <label class="block text-[11px] font-semibold text-slate-400 mb-1">New Secure Password</label>
+                                <input type="password" id="newSupPass" placeholder="Enter new password" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-amber-500">
+                            </div>
+                            <button onclick="saveNewSupervisorPassword()" class="w-full py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-xl transition shadow">Update Password & Continue</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function saveNewSupervisorPassword() {
+            const val = document.getElementById('newSupPass').value;
+            if (!val || val.length < 5) {
+                showToast('Password must be at least 5 characters long', 'error');
+                return;
+            }
+            State.supervisorAccount.password = val;
+            State.supervisorAccount.mustChangePassword = false;
+            saveStateToStorage();
+
+            State.currentUser = { id: 'sup-1', name: 'Chief Supervisor', role: 'supervisor', email: 'supervisor@dualufix.internal', phone: '+1555019000' };
+            State.currentView = 'supervisor_dash';
+            closeModal();
+            showToast('Password updated successfully!');
+            render();
+        }
+
         function openWorkerLoginModal() {
             const container = document.getElementById('modalContainer');
             container.innerHTML = `
                 <div class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 fade-in">
                     <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-sm p-5 space-y-4 shadow-2xl">
                         <div class="flex items-center justify-between">
-                            <h3 class="text-sm font-bold text-slate-100">Electrician Authentication</h3>
+                            <h3 class="text-sm font-bold text-slate-100">Technician Unique Login</h3>
                             <button onclick="closeModal()" class="text-slate-400 hover:text-slate-200"><i class="fa-solid fa-xmark text-base"></i></button>
                         </div>
-                        <p class="text-xs text-slate-400">Enter your name and the technician team password to access your work orders.</p>
+                        <p class="text-xs text-slate-400">Enter your unique username and personal password.</p>
                         
                         <div class="space-y-3">
                             <div>
-                                <label class="block text-[11px] font-semibold text-slate-400 mb-1">Your Name</label>
-                                <input type="text" id="workerLoginName" placeholder="e.g. Mike Ross" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-cyan-500">
+                                <label class="block text-[11px] font-semibold text-slate-400 mb-1">Username</label>
+                                <input type="text" id="workerLoginUsername" placeholder="e.g. mikeross" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-cyan-500">
                             </div>
                             <div>
-                                <label class="block text-[11px] font-semibold text-slate-400 mb-1">Technician Password</label>
-                                <input type="password" id="workerLoginPassword" placeholder="Enter password" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-cyan-500">
+                                <label class="block text-[11px] font-semibold text-slate-400 mb-1">Password</label>
+                                <input type="password" id="workerLoginPassword" placeholder="Password" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-cyan-500">
                             </div>
-                            <button onclick="verifyWorkerLogin()" class="w-full py-2.5 bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs rounded-xl transition shadow">Log In as Technician</button>
+                            <button onclick="verifyWorkerLogin()" class="w-full py-2.5 bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs rounded-xl transition shadow">Sign In to My Tasks</button>
                         </div>
                     </div>
                 </div>
@@ -312,34 +365,26 @@
         }
 
         function verifyWorkerLogin() {
-            const name = document.getElementById('workerLoginName').value.trim();
+            const username = document.getElementById('workerLoginUsername').value.trim().toLowerCase();
             const pass = document.getElementById('workerLoginPassword').value;
 
-            if (!name) {
-                showToast('Please enter your name', 'error');
-                return;
-            }
-            if (pass !== APP_CONFIG.technicianPassword) {
-                showToast('Incorrect technician password!', 'error');
+            const elec = State.electricians.find(function(e) { return e.username === username && e.password === pass; });
+            if (!elec) {
+                showToast('Invalid technician username or password!', 'error');
                 return;
             }
 
-            State.currentUser = { id: 'w-' + Date.now(), name: name, role: 'worker', email: `${name.toLowerCase().replace(/\s+/g,'.')}@voltfix.internal`, phone: '+1555012345' };
+            State.currentUser = { id: elec.id, name: elec.name, role: 'worker', email: elec.email, phone: elec.phone };
             State.currentView = 'worker_dash';
             closeModal();
-            showToast(`Welcome back, ${name}!`);
+            showToast('Welcome back, ' + elec.name + '!');
             render();
         }
 
-        function loginAs(role) {
-            if (role === 'supervisor') {
-                State.currentUser = { id: 'sup-1', name: 'Chief Supervisor Robert', role: 'supervisor', email: 'supervisor@voltfix.internal', phone: '+1555019000' };
-                State.currentView = 'supervisor_dash';
-            } else if (role === 'staff') {
-                State.currentUser = { id: 's1', name: 'Sarah Jenkins (Office Staff)', role: 'staff', email: 'sarah.jenkins@voltfix.internal', phone: '+1555019876' };
-                State.currentView = 'staff_dash';
-            }
-            showToast(`Logged in as ${State.currentUser.name}`);
+        function loginAsStaff() {
+            State.currentUser = { id: 's1', name: 'Sarah Jenkins (Office Staff)', role: 'staff', email: 'sarah.jenkins@dualufix.internal', phone: '+1555019876' };
+            State.currentView = 'staff_dash';
+            showToast('Logged in as Office Staff');
             render();
         }
 
@@ -352,17 +397,21 @@
 
         function renderSupervisorNav() {
             return `
-                <button onclick="switchView('supervisor_dash')" class="flex flex-col items-center py-1 px-3 ${State.currentView === 'supervisor_dash' ? 'text-amber-400' : 'text-slate-400 hover:text-slate-200'} transition">
-                    <i class="fa-solid fa-clipboard-list text-base mb-0.5"></i>
-                    <span class="text-[10px] font-medium">Faults (${State.faults.length})</span>
+                <button onclick="switchView('supervisor_dash')" class="flex flex-col items-center py-1 px-2 ${State.currentView === 'supervisor_dash' ? 'text-amber-400' : 'text-slate-400 hover:text-slate-200'} transition">
+                    <i class="fa-solid fa-clipboard-list text-sm mb-0.5"></i>
+                    <span class="text-[9px] font-medium">Faults (${State.faults.length})</span>
                 </button>
-                <button onclick="switchView('supervisor_team')" class="flex flex-col items-center py-1 px-3 ${State.currentView === 'supervisor_team' ? 'text-amber-400' : 'text-slate-400 hover:text-slate-200'} transition">
-                    <i class="fa-solid fa-users-gear text-base mb-0.5"></i>
-                    <span class="text-[10px] font-medium">Electricians (${State.electricians.length})</span>
+                <button onclick="switchView('supervisor_team')" class="flex flex-col items-center py-1 px-2 ${State.currentView === 'supervisor_team' ? 'text-amber-400' : 'text-slate-400 hover:text-slate-200'} transition">
+                    <i class="fa-solid fa-users-gear text-sm mb-0.5"></i>
+                    <span class="text-[9px] font-medium">Electricians</span>
                 </button>
-                <button onclick="switchView('reports')" class="flex flex-col items-center py-1 px-3 ${State.currentView === 'reports' ? 'text-amber-400' : 'text-slate-400 hover:text-slate-200'} transition">
-                    <i class="fa-solid fa-file-pdf text-base mb-0.5"></i>
-                    <span class="text-[10px] font-medium">Daily PDF & Email</span>
+                <button onclick="switchView('supervisor_history')" class="flex flex-col items-center py-1 px-2 ${State.currentView === 'supervisor_history' ? 'text-amber-400' : 'text-slate-400 hover:text-slate-200'} transition">
+                    <i class="fa-solid fa-calendar-days text-sm mb-0.5"></i>
+                    <span class="text-[9px] font-medium">Job History</span>
+                </button>
+                <button onclick="switchView('reports')" class="flex flex-col items-center py-1 px-2 ${State.currentView === 'reports' ? 'text-amber-400' : 'text-slate-400 hover:text-slate-200'} transition">
+                    <i class="fa-solid fa-file-pdf text-sm mb-0.5"></i>
+                    <span class="text-[9px] font-medium">PDF & Email</span>
                 </button>
             `;
         }
@@ -373,9 +422,9 @@
         }
 
         function renderSupervisorDashboard() {
-            const pendingCount = State.faults.filter(f => f.status === 'Pending').length;
-            const inProgressCount = State.faults.filter(f => f.status === 'In Progress' || f.status === 'Assigned').length;
-            const completedCount = State.faults.filter(f => f.status === 'Completed').length;
+            const pendingCount = State.faults.filter(function(f) { return f.status === 'Pending'; }).length;
+            const inProgressCount = State.faults.filter(function(f) { return f.status === 'In Progress' || f.status === 'Assigned'; }).length;
+            const completedCount = State.faults.filter(function(f) { return f.status === 'Completed'; }).length;
 
             return `
                 <div class="fade-in space-y-4 pb-16">
@@ -405,7 +454,7 @@
                                 <i class="fa-solid fa-circle-check text-3xl text-slate-600 mb-2"></i>
                                 <p class="text-xs text-slate-400">No active fault reports right now.</p>
                             </div>
-                        ` : State.faults.map(f => {
+                        ` : State.faults.map(function(f) {
                             let statusColor = 'bg-amber-500/10 text-amber-400 border-amber-500/20';
                             if (f.status === 'Completed') statusColor = 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
                             if (f.status === 'In Progress') statusColor = 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20';
@@ -425,7 +474,7 @@
                                             <i class="fa-solid fa-location-dot text-amber-500 shrink-0"></i>
                                             <span class="font-medium">${f.location}</span>
                                         </div>
-                                        <p class="text-slate-400 pt-1">${f.description}</p>
+                                        <p class="text-slate-400 pt-1">${f.description}</p>${f.materialsUsed ? `<div class="text-[11px] text-cyan-400 pt-1">Materials Used: ${f.materialsUsed}</div>` : ''}
                                         <div class="text-[11px] text-slate-500 pt-1 flex justify-between">
                                             <span>Reporter: <strong>${f.reporterName}</strong></span>
                                             <span class="uppercase font-bold ${f.priority === 'High' \vert{}\vert{} f.priority === 'Urgent' ? 'text-rose-400' : 'text-slate-400'}">${f.priority}</span>
@@ -472,7 +521,7 @@
                     <div class="flex items-center justify-between">
                         <div>
                             <h3 class="text-sm font-bold text-slate-100">Electrician Team</h3>
-                            <p class="text-[11px] text-slate-400">Manage registered workers & contact numbers</p>
+                            <p class="text-[11px] text-slate-400">Create & manage unique technician logins</p>
                         </div>
                         <button onclick="openAddElectricianModal()" class="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-lg transition flex items-center space-x-1 shadow">
                             <i class="fa-solid fa-user-plus"></i>
@@ -481,7 +530,7 @@
                     </div>
 
                     <div class="space-y-3">
-                        ${State.electricians.map(e => `
+                        ${State.electricians.map(function(e) { return `
                             <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 flex items-center justify-between">
                                 <div class="flex items-center space-x-3">
                                     <div class="w-10 h-10 rounded-full bg-cyan-500/10 text-cyan-400 flex items-center justify-center font-bold text-sm">
@@ -489,23 +538,124 @@
                                     </div>
                                     <div>
                                         <h4 class="text-sm font-bold text-slate-200">${e.name}</h4>
+                                        <p class="text-[11px] text-cyan-400 font-mono">Username: @${e.username}</p>
                                         <p class="text-[11px] text-slate-400"><i class="fa-solid fa-phone text-xs mr-1 text-slate-500"></i> ${e.phone}</p>
-                                        <p class="text-[11px] text-slate-400"><i class="fa-solid fa-envelope text-xs mr-1 text-slate-500"></i> ${e.email}</p>
                                     </div>
                                 </div>
-                                <div class="flex items-center space-x-2">
-                                    <span class="text-[10px] px-2 py-1 rounded bg-slate-800 text-slate-300 font-medium">
-                                        ${State.faults.filter(f => f.assignedToId === e.id && f.status !== 'Completed').length} active
-                                    </span>
-                                    <button onclick="removeElectrician('${e.id}')" class="p-2 text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition" title="Remove Electrician">
-                                        <i class="fa-solid fa-trash-can text-xs"></i>
-                                    </button>
-                                </div>
+                                <button onclick="removeElectrician('${e.id}')" class="p-2 text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition" title="Remove Electrician">
+                                    <i class="fa-solid fa-trash-can text-xs"></i>
+                                </button>
                             </div>
-                        `).join('')}
+                        `; }).join('')}
                     </div>
                 </div>
             `;
+        }
+
+        function renderSupervisorHistoryView() {
+            const selectedDate = window._historySearchDate || new Date().toISOString().split('T')[0];
+            const matchingFaults = State.faults.filter(function(f) {
+                const targetDate = (f.completedAt || f.createdAt).split('T')[0];
+                return targetDate === selectedDate;
+            });
+
+            return `
+                <div class="fade-in space-y-4 pb-16">
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-xl space-y-3">
+                        <div class="flex items-center space-x-2">
+                            <i class="fa-solid fa-calendar-days text-amber-400"></i>
+                            <h3 class="text-sm font-bold text-slate-100">Job History & Date Search</h3>
+                        </div>
+                        <p class="text-[11px] text-slate-400">Search jobs completed on a specific date, view assigned technician, task location, and materials used.</p>
+
+                        <div class="flex space-x-2 pt-1">
+                            <input type="date" id="historyDateInput" value="${selectedDate}" class="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-amber-500">
+                            <button onclick="filterHistoryByDate()" class="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-xl transition shrink-0">
+                                <i class="fa-solid fa-magnifying-glass mr-1"></i> Search
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between pt-1">
+                        <h4 class="text-xs font-bold uppercase tracking-wider text-slate-300">Results for: ${selectedDate} (${matchingFaults.length} found)</h4>
+                        ${matchingFaults.length > 0 ? `<button onclick="downloadHistoryPDF('${selectedDate}')" class="px-3 py-1 bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-[11px] rounded-lg transition flex items-center space-x-1 shadow"><i class="fa-solid fa-download"></i><span>Download Date PDF</span></button>` : ''}
+                    </div>
+
+                    <div class="space-y-3">
+                        ${matchingFaults.length === 0 ? `
+                            <div class="text-center py-10 bg-slate-900/50 rounded-2xl border border-slate-800">
+                                <i class="fa-solid fa-folder-open text-3xl text-slate-600 mb-2"></i>
+                                <p class="text-xs text-slate-400">No work orders recorded for ${selectedDate}.</p>
+                            </div>
+                        ` : matchingFaults.map(function(f) { return `
+                            <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 space-y-2.5">
+                                <div class="flex justify-between items-start">
+                                    <div>
+                                        <span class="text-[10px] font-mono text-amber-400">${f.id}</span>
+                                        <h4 class="text-sm font-bold text-slate-100">${f.title}</h4>
+                                    </div>
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-semibold ${f.status === 'Completed' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'}">${f.status} (${f.progress}%)</span>
+                                </div>
+                                <div class="text-xs space-y-1 bg-slate-950 p-2.5 rounded-lg border border-slate-800 text-slate-300">
+                                    <div><i class="fa-solid fa-location-dot text-amber-500 mr-1"></i> Location: <strong>${f.location}</strong></div>
+                                    <div><i class="fa-solid fa-user-gear text-cyan-400 mr-1"></i> Electrician: <strong>${f.assignedToName || 'Unassigned'}</strong></div>
+                                    <div><i class="fa-solid fa-boxes-stacked text-emerald-400 mr-1"></i> Materials Used: <strong>${f.materialsUsed || 'None listed'}</strong></div>
+                                </div>
+                            </div>
+                        `; }).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function filterHistoryByDate() {
+            const input = document.getElementById('historyDateInput');
+            if (input && input.value) {
+                window._historySearchDate = input.value;
+                render();
+            }
+        }
+
+        function downloadHistoryPDF(dateStr) {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            const matching = State.faults.filter(function(f) { return (f.completedAt || f.createdAt).split('T')[0] === dateStr; });
+
+            doc.setFillColor(15, 23, 42);
+            doc.rect(0, 0, 210, 297, 'F');
+
+            doc.setTextColor(245, 158, 11);
+            doc.setFontSize(22);
+            doc.text('Dualufix Job Audit Report (' + dateStr + ')', 20, 25);
+
+            doc.setTextColor(148, 163, 184);
+            doc.setFontSize(10);
+            doc.text('Generated on: ' + new Date().toLocaleString() + ' | Total Records: ' + matching.length, 20, 33);
+
+            let y = 50;
+            matching.forEach(function(f, idx) {
+                if (y > 260) {
+                    doc.addPage();
+                    doc.setFillColor(15, 23, 42);
+                    doc.rect(0, 0, 210, 297, 'F');
+                    y = 25;
+                }
+
+                doc.setTextColor(255, 255, 255);
+                doc.setFontSize(12);
+                doc.text((idx + 1) + '. [' + f.id + '] ' + f.title, 20, y);
+
+                doc.setFontSize(9);
+                doc.setTextColor(148, 163, 184);
+                doc.text('Location: ' + f.location + ' | Status: ' + f.status + ' (' + f.progress + '%)', 20, y + 6);
+                doc.text('Electrician: ' + (f.assignedToName || 'Unassigned') + ' | Materials: ' + (f.materialsUsed || 'None'), 20, y + 12);
+                doc.text('Description: ' + f.description, 20, y + 18);
+
+                y += 28;
+            });
+
+            doc.save('Dualufix_Job_History_' + dateStr + '.pdf');
+            showToast('Date history PDF downloaded successfully!');
         }
 
         function renderReportsView() {
@@ -534,7 +684,7 @@
                             </div>
                             <div class="flex justify-between text-slate-400">
                                 <span>Completed Tasks:</span>
-                                <span class="text-emerald-400 font-medium">${State.faults.filter(f => f.status === 'Completed').length}</span>
+                                <span class="text-emerald-400 font-medium">${State.faults.filter(function(f){ return f.status === 'Completed'; }).length}</span>
                             </div>
                         </div>
 
@@ -547,7 +697,7 @@
                             <div class="pt-2 border-t border-slate-800 space-y-2">
                                 <label class="block text-xs font-semibold text-slate-300">Email Report to Specific Address</label>
                                 <div class="flex space-x-2">
-                                    <input type="email" id="reportEmailInput" placeholder="supervisor@facility.org" value="facility.head@voltfix.internal" class="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-slate-100 focus:outline-none focus:border-amber-500">
+                                    <input type="email" id="reportEmailInput" placeholder="supervisor@facility.org" value="facility.head@dualufix.internal" class="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-slate-100 focus:outline-none focus:border-amber-500">
                                     <button onclick="sendReportByEmail()" class="px-4 py-2.5 bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs rounded-xl transition flex items-center space-x-1.5 shrink-0">
                                         <i class="fa-solid fa-paper-plane"></i>
                                         <span>Send Email</span>
@@ -561,16 +711,17 @@
         }
 
         function renderWorkerNav() {
+            const activeMyTasks = State.faults.filter(function(f) { return (f.assignedToId === State.currentUser.id || f.assignedToName === State.currentUser.name) && f.progress < 100; });
             return `
                 <button onclick="switchView('worker_dash')" class="flex flex-col items-center py-1 px-6 text-cyan-400">
                     <i class="fa-solid fa-hard-hat text-base mb-0.5"></i>
-                    <span class="text-[10px] font-medium">Assigned Tasks (${State.faults.filter(f => f.assignedToId === State.currentUser.id || f.assignedToName === State.currentUser.name).length})</span>
+                    <span class="text-[10px] font-medium">My Tasks (${activeMyTasks.length})</span>
                 </button>
             `;
         }
 
         function renderWorkerDashboard() {
-            const myTasks = State.faults.filter(f => f.assignedToId === State.currentUser.id || f.assignedToName === State.currentUser.name || f.assignedToId === 'elec-1');
+            const myTasks = State.faults.filter(function(f) { return (f.assignedToId === State.currentUser.id || f.assignedToName === State.currentUser.name) && f.progress < 100; });
 
             return `
                 <div class="fade-in space-y-4 pb-16">
@@ -580,14 +731,14 @@
                                 <i class="fa-solid fa-screwdriver-wrench"></i>
                             </div>
                             <div>
-                                <h3 class="text-sm font-bold text-slate-100">Electrician Workspace (${State.currentUser.name})</h3>
-                                <p class="text-[11px] text-cyan-300/80">Inspect locations, upload photos & update progress</p>
+                                <h3 class="text-sm font-bold text-slate-100">Technician: ${State.currentUser.name}</h3>
+                                <p class="text-[11px] text-cyan-300/80">Update progress, materials & photos. Tasks disappear at 100%.</p>
                             </div>
                         </div>
                     </div>
 
                     <div class="flex items-center justify-between pt-1">
-                        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300">My Assigned Work Orders</h3>
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300">Active Assigned Work Orders</h3>
                         <button onclick="openRoutineCheckModal()" class="px-3 py-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-[11px] rounded-lg transition flex items-center space-x-1 shadow">
                             <i class="fa-solid fa-triangle-exclamation"></i>
                             <span>Log Routine Fault</span>
@@ -597,10 +748,11 @@
                     <div class="space-y-3">
                         ${myTasks.length === 0 ? `
                             <div class="text-center py-10 bg-slate-900/50 rounded-2xl border border-slate-800">
-                                <i class="fa-solid fa-circle-check text-3xl text-slate-600 mb-2"></i>
-                                <p class="text-xs text-slate-400">You have no tasks assigned right now.</p>
+                                <i class="fa-solid fa-circle-check text-3xl text-emerald-500 mb-2"></i>
+                                <p class="text-xs text-slate-300 font-medium">All assigned tasks completed!</p>
+                                <p class="text-[11px] text-slate-500 mt-1">Completed orders have cleared from your screen.</p>
                             </div>
-                        ` : myTasks.map(f => `
+                        ` : myTasks.map(function(f) { return `
                             <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 shadow-md space-y-3">
                                 <div class="flex items-start justify-between">
                                     <div>
@@ -616,6 +768,11 @@
                                         <span class="font-medium">${f.location}</span>
                                     </div>
                                     <p class="text-slate-400 pt-1">${f.description}</p>
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-slate-400 mb-1">Materials Used</label>
+                                    <input type="text" value="${f.materialsUsed \vert{}\vert{} ''}" onchange="updateTaskMaterials('${f.id}', this.value)" placeholder="e.g. 2x Circuit breakers, 10m cable..." class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-cyan-500">
                                 </div>
 
                                 <div class="grid grid-cols-2 gap-2 pt-1">
@@ -644,7 +801,7 @@
                                     </button>
                                 </div>
                             </div>
-                        `).join('')}
+                        `; }).join('')}
                     </div>
                 </div>
             `;
@@ -707,7 +864,7 @@
                     <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 space-y-2">
                         <h4 class="text-xs font-bold uppercase tracking-wider text-slate-300">My Reported Issues</h4>
                         <div class="space-y-2 pt-1">
-                            ${State.faults.filter(f => f.reporterRole === 'staff').length === 0 ? `<p class="text-xs text-slate-500">No issues reported yet.</p>` : State.faults.filter(f => f.reporterRole === 'staff').map(f => `
+                            ${State.faults.filter(function(f){ return f.reporterRole === 'staff'; }).length === 0 ? `<p class="text-xs text-slate-500">No issues reported yet.</p>` : State.faults.filter(function(f){ return f.reporterRole === 'staff'; }).map(function(f) { return `
                                 <div class="bg-slate-950 p-3 rounded-lg border border-slate-800 flex justify-between items-center text-xs">
                                     <div>
                                         <div class="font-bold text-slate-200">${f.title}</div>
@@ -715,7 +872,7 @@
                                     </div>
                                     <span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">${f.status}</span>
                                 </div>
-                            `).join('')}
+                            `; }).join('')}
                         </div>
                     </div>
                 </div>
@@ -723,7 +880,7 @@
         }
 
         function openAssignModal(faultId) {
-            const fault = State.faults.find(f => f.id === faultId);
+            const fault = State.faults.find(function(f) { return f.id === faultId; });
             const container = document.getElementById('modalContainer');
             container.innerHTML = `
                 <div class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 fade-in">
@@ -735,15 +892,15 @@
                         <p class="text-xs text-slate-400">Select electrician to dispatch for <strong>${fault.title}</strong> at <strong>${fault.location}</strong>.</p>
                         
                         <div class="space-y-2 max-h-48 overflow-y-auto">
-                            ${State.electricians.map(e => `
+                            ${State.electricians.map(function(e) { return `
                                 <button onclick="assignFaultToElectrician('${fault.id}', '${e.id}')" class="w-full text-left p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 transition flex items-center justify-between">
                                     <div>
-                                        <div class="text-xs font-semibold text-slate-200">${e.name}</div>
+                                        <div class="text-xs font-semibold text-slate-200">${e.name} (@${e.username})</div>
                                         <div class="text-[10px] text-slate-400">${e.phone}</div>
                                     </div>
                                     <span class="text-[10px] bg-amber-500/10 text-amber-400 px-2 py-1 rounded font-bold">Assign & SMS</span>
                                 </button>
-                            `).join('')}
+                            `; }).join('')}
                         </div>
 
                         <button onclick="closeModal()" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs rounded-xl transition">Cancel</button>
@@ -753,8 +910,8 @@
         }
 
         function assignFaultToElectrician(faultId, elecId) {
-            const fault = State.faults.find(f => f.id === faultId);
-            const elec = State.electricians.find(e => e.id === elecId);
+            const fault = State.faults.find(function(f) { return f.id === faultId; });
+            const elec = State.electricians.find(function(e) { return e.id === elecId; });
             if (!fault || !elec) return;
 
             fault.assignedToId = elec.id;
@@ -762,7 +919,7 @@
             fault.assignedPhone = elec.phone;
             fault.status = 'Assigned';
 
-            const smsText = `VoltFix Alert: New work order (${fault.id}) assigned at ${fault.location}. Priority: ${fault.priority}.`;
+            const smsText = `Dualufix Alert: New work order (${fault.id}) assigned at ${fault.location}. Priority: ${fault.priority}. Login to view details.`;
             State.smsInbox.unshift({
                 id: Date.now(),
                 recipient: elec.phone,
@@ -772,12 +929,11 @@
 
             saveStateToStorage();
             closeModal();
-            showToast(`Assigned to ${elec.name}! Opening SMS Gateway...`);
+            showToast('Assigned to ' + elec.name + '! Opening SMS Gateway...');
             render();
 
-            // REAL SMS GATEWAY LAUNCH: Opens phone's native SMS application with prefilled number and message
-            setTimeout(() => {
-                window.location.href = `sms:${elec.phone}?body=${encodeURIComponent(smsText)}`;
+            setTimeout(function() {
+                window.location.href = 'sms:' + elec.phone + '?body=' + encodeURIComponent(smsText);
             }, 600);
         }
 
@@ -798,7 +954,7 @@
                         <p class="text-[11px] text-slate-400">All text dispatch logs sent to technicians:</p>
 
                         <div class="space-y-2 max-h-60 overflow-y-auto">
-                            ${State.smsInbox.length === 0 ? `<p class="text-xs text-slate-500 text-center py-4">No SMS alerts sent yet.</p>` : State.smsInbox.map(sms => `
+                            ${State.smsInbox.length === 0 ? `<p class="text-xs text-slate-500 text-center py-4">No SMS alerts sent yet.</p>` : State.smsInbox.map(function(sms) { return `
                                 <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-1">
                                     <div class="flex justify-between text-[10px] text-slate-400">
                                         <span>To: <strong class="text-amber-400">${sms.recipient}</strong></span>
@@ -806,7 +962,7 @@
                                     </div>
                                     <p class="text-xs text-slate-200 font-mono">${sms.message}</p>
                                 </div>
-                            `).join('')}
+                            `; }).join('')}
                         </div>
 
                         <button onclick="closeModal()" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs rounded-xl transition">Close</button>
@@ -821,7 +977,7 @@
                 <div class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 fade-in">
                     <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-sm p-5 space-y-4 shadow-2xl">
                         <div class="flex items-center justify-between">
-                            <h3 class="text-sm font-bold text-slate-100">Add Electrician Worker</h3>
+                            <h3 class="text-sm font-bold text-slate-100">Create Electrician Login</h3>
                             <button onclick="closeModal()" class="text-slate-400 hover:text-slate-200"><i class="fa-solid fa-xmark text-base"></i></button>
                         </div>
                         <form onsubmit="handleAddElectricianSubmit(event)" class="space-y-3">
@@ -830,14 +986,18 @@
                                 <input type="text" id="newElecName" required placeholder="Alex Mercer" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-amber-500">
                             </div>
                             <div>
+                                <label class="block text-[11px] font-semibold text-slate-400 mb-1">Unique Username</label>
+                                <input type="text" id="newElecUser" required placeholder="alexmercer" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-amber-500">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-semibold text-slate-400 mb-1">Personal Password</label>
+                                <input type="password" id="newElecPass" required placeholder="Password for login" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-amber-500">
+                            </div>
+                            <div>
                                 <label class="block text-[11px] font-semibold text-slate-400 mb-1">Phone Number (for SMS)</label>
                                 <input type="tel" id="newElecPhone" required placeholder="+1555018899" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-amber-500">
                             </div>
-                            <div>
-                                <label class="block text-[11px] font-semibold text-slate-400 mb-1">Email Address</label>
-                                <input type="email" id="newElecEmail" required placeholder="alex.mercer@voltfix.internal" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-amber-500">
-                            </div>
-                            <button type="submit" class="w-full py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-xl transition shadow">Add Electrician</button>
+                            <button type="submit" class="w-full py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-xl transition shadow">Create Electrician Account</button>
                         </form>
                     </div>
                 </div>
@@ -846,19 +1006,28 @@
 
         function handleAddElectricianSubmit(e) {
             e.preventDefault();
-            const name = document.getElementById('newElecName').value;
-            const phone = document.getElementById('newElecPhone').value;
-            const email = document.getElementById('newElecEmail').value;
+            const name = document.getElementById('newElecName').value.trim();
+            const username = document.getElementById('newElecUser').value.trim().toLowerCase();
+            const password = document.getElementById('newElecPass').value;
+            const phone = document.getElementById('newElecPhone').value.trim();
 
-            State.electricians.push({ id: 'elec-' + Date.now(), name, phone, email, activeTasks: 0 });
+            State.electricians.push({
+                id: 'elec-' + Date.now(),
+                name: name,
+                username: username,
+                password: password,
+                phone: phone,
+                email: username + '@dualufix.internal'
+            });
+
             saveStateToStorage();
             closeModal();
-            showToast(`Added ${name} to team`);
+            showToast('Created login for ' + name);
             render();
         }
 
         function removeElectrician(id) {
-            State.electricians = State.electricians.filter(e => e.id !== id);
+            State.electricians = State.electricians.filter(function(e) { return e.id !== id; });
             saveStateToStorage();
             showToast('Electrician removed', 'info');
             render();
@@ -913,11 +1082,13 @@
                 reporterId: State.currentUser.id,
                 reporterName: State.currentUser.name,
                 reporterRole: State.currentUser.role,
-                title, location, description, priority,
+                title: title, location: location, description: description, priority: priority,
                 status: 'Pending',
                 assignedToId: '', assignedToName: '', assignedPhone: '',
                 createdAt: new Date().toISOString(),
+                completedAt: '',
                 progress: 0,
+                materialsUsed: '',
                 beforePhoto: 'https://placehold.co/400x300/1e293b/06b6d4?text=Before:+Routine+Inspection',
                 afterPhoto: ''
             };
@@ -941,11 +1112,13 @@
                 reporterId: State.currentUser.id,
                 reporterName: State.currentUser.name,
                 reporterRole: State.currentUser.role,
-                title, location, description, priority,
+                title: title, location: location, description: description, priority: priority,
                 status: 'Pending',
                 assignedToId: '', assignedToName: '', assignedPhone: '',
                 createdAt: new Date().toISOString(),
+                completedAt: '',
                 progress: 0,
+                materialsUsed: '',
                 beforePhoto: 'https://placehold.co/400x300/1e293b/10b981?text=Before:+Office+Issue',
                 afterPhoto: ''
             };
@@ -978,11 +1151,11 @@
                         <p class="text-[11px] text-slate-400">Select photo for work order ${faultId}:</p>
                         
                         <div class="grid grid-cols-3 gap-2">
-                            ${samplePhotos.map(url => `
+                            ${samplePhotos.map(function(url) { return `
                                 <button onclick="selectPhotoForTask('${faultId}', '${type}', '${url}')" class="rounded-lg overflow-hidden border border-slate-700 hover:border-amber-400 transition group">
                                     <img src="${url}" class="w-full h-20 object-cover group-hover:scale-105 transition">
                                 </button>
-                            `).join('')}
+                            `; }).join('')}
                         </div>
 
                         <button onclick="closeModal()" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs rounded-xl transition">Cancel</button>
@@ -992,7 +1165,7 @@
         }
 
         function selectPhotoForTask(faultId, type, url) {
-            const fault = State.faults.find(f => f.id === faultId);
+            const fault = State.faults.find(function(f) { return f.id === faultId; });
             if (!fault) return;
 
             if (type === 'before') fault.beforePhoto = url;
@@ -1000,38 +1173,51 @@
                 fault.afterPhoto = url;
                 fault.progress = 100;
                 fault.status = 'Completed';
+                fault.completedAt = new Date().toISOString();
             }
 
             saveStateToStorage();
             closeModal();
-            showToast(`${type.toUpperCase()} photo attached successfully!`);
+            showToast(type.toUpperCase() + ' photo attached successfully!');
             render();
         }
 
         function updateTaskProgress(faultId, val) {
-            const fault = State.faults.find(f => f.id === faultId);
+            const fault = State.faults.find(function(f) { return f.id === faultId; });
             if (!fault) return;
 
             fault.progress = parseInt(val);
-            if (fault.progress === 100) fault.status = 'Completed';
-            else if (fault.progress > 0) fault.status = 'In Progress';
+            if (fault.progress === 100) {
+                fault.status = 'Completed';
+                fault.completedAt = new Date().toISOString();
+            } else if (fault.progress > 0) {
+                fault.status = 'In Progress';
+            }
 
             saveStateToStorage();
             render();
         }
 
+        function updateTaskMaterials(faultId, val) {
+            const fault = State.faults.find(function(f) { return f.id === faultId; });
+            if (!fault) return;
+            fault.materialsUsed = val;
+            saveStateToStorage();
+        }
+
         function completeTaskQuick(faultId) {
-            const fault = State.faults.find(f => f.id === faultId);
+            const fault = State.faults.find(function(f) { return f.id === faultId; });
             if (!fault) return;
 
             fault.progress = 100;
             fault.status = 'Completed';
+            fault.completedAt = new Date().toISOString();
             if (!fault.afterPhoto) {
                 fault.afterPhoto = 'https://placehold.co/400x300/1e293b/10b981?text=Job+Completed+Successfully';
             }
 
             saveStateToStorage();
-            showToast('Work order marked 100% complete!');
+            showToast('Work order marked 100% complete and removed from your active screen!');
             render();
         }
 
@@ -1048,7 +1234,7 @@
 
             doc.setTextColor(245, 158, 11);
             doc.setFontSize(22);
-            doc.text("VoltFix Daily Maintenance Report", 20, 25);
+            doc.text("Dualufix Daily Maintenance Report", 20, 25);
 
             doc.setTextColor(148, 163, 184);
             doc.setFontSize(10);
@@ -1056,7 +1242,7 @@
             doc.text(`Total Faults & Work Orders Logged: ${State.faults.length}`, 20, 40);
 
             let y = 55;
-            State.faults.forEach((f, idx) => {
+            State.faults.forEach(function(f, idx) {
                 if (y > 260) {
                     doc.addPage();
                     doc.setFillColor(15, 23, 42);
@@ -1071,13 +1257,13 @@
                 doc.setFontSize(9);
                 doc.setTextColor(148, 163, 184);
                 doc.text(`Location: ${f.location} | Status: ${f.status} | Progress: ${f.progress}%`, 20, y + 6);
-                doc.text(`Assigned To: ${f.assignedToName || 'Unassigned'} | Priority: ${f.priority}`, 20, y + 12);
+                doc.text(`Assigned To: ${f.assignedToName || 'Unassigned'} | Materials: ${f.materialsUsed || 'None'}`, 20, y + 12);
                 doc.text(`Description: ${f.description}`, 20, y + 18);
 
                 y += 28;
             });
 
-            doc.save(`VoltFix_Maintenance_Report_${new Date().toISOString().split('T')[0]}.pdf`);
+            doc.save(`Dualufix_Maintenance_Report_${new Date().toISOString().split('T')[0]}.pdf`);
             showToast('PDF Report downloaded to phone!');
         }
 
